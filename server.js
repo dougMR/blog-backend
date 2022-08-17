@@ -156,7 +156,14 @@ server.get("/authors", async (req, res) => {
 
 // #9 starts the server listening for requests
 // run express API server in background to listen for incoming requests
-server.listen(3001, () => {
+
+// if heroku, process.env.PORT will be provided
+let port = process.env.PORT; 
+if(!port){
+    // otherwise, fall back to localhost port 3001
+    port = 3001;
+}
+server.listen(port, () => {
     console.log("Server online.");
 });
 
