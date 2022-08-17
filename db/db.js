@@ -18,10 +18,34 @@ if (!databaseURL) {
             ssl: {
                 require: true,
                 rejectUnauthorized: false,
-            }
-        }
+            },
+        },
     };
 }
+
+// # 10 seeding the DB
+const createFirstUser = async () => {
+    const users = await User.findAll();
+    if (users.length === 0) {
+        User.create({
+            username: "Doug R",
+            password: bcrypt.hashSync("secretpassword", 10),
+        });
+    }
+};
+
+const createSecondUser = async () => {
+    const secondUser = await User.findOne({
+        where: { username: "User Number Two!" },
+    });
+    if (!secondUser) {
+        User.create({
+            username: "User Number Two!",
+            password: bcrypt.hashSync("secret", 10),
+        });
+    }
+};
+
 const db = new Sequelize(databaseURL, options);
 // const db = new Sequelize("postgres://dougroussin@localhost:5432/blog", {
 //     logging: false,
@@ -33,8 +57,10 @@ const Post = require("./Post")(db);
 const connectToDB = async () => {
     try {
         await db.authenticate();
-        console.log("Connected successfully");
-        db.sync(); // #6 sync by creating the tables based off our models if they don't exist
+        console.log("Connected DB successfully");
+        await db.sync(); // #6 sync by creating the tables based off our models if they don't exist
+        await createFirstUser();
+        await createSecondUser();
     } catch (error) {
         console.error(error);
         console.error("PANIC! DB PROBLEMS!");

@@ -167,28 +167,3 @@ server.listen(port, () => {
     console.log("Server online.");
 });
 
-// # 10 seeding the DB
-const createFirstUser = async () => {
-    const users = await User.findAll();
-    if (users.length === 0) {
-        User.create({
-            username: "Doug R",
-            password: bcrypt.hashSync("secretpassword", 10),
-        });
-    }
-};
-
-createFirstUser();
-
-const createSecondUser = async () => {
-    const secondUser = await User.findOne({
-        where: { username: "User Number Two!" },
-    });
-    if (!secondUser) {
-        User.create({
-            username: "User Number Two!",
-            password: bcrypt.hashSync("secret", 10),
-        });
-    }
-};
-createSecondUser();
