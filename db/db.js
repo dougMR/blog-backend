@@ -1,5 +1,7 @@
+
 // #3 setup DB models
 const Sequelize = require("sequelize");
+const bcrypt = require("bcrypt");
 
 let options = {};
 // if on heroku, there will be process.env, with property DATABASE_URL
