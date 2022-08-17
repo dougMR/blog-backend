@@ -3,9 +3,11 @@
 // express setup includes (cors, body-parser, bcrypt, sessions)
 const express = require("express");
 const server = express();
-// so our frontend on 3000 can talk to our server on 3001
+
+// so our frontend on 3000(etc) can talk to our server on 3001(etc)
 const cors = require("cors");
-server.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+server.use(cors({ credentials: true, origin: ["http://localhost:3000","https://dougmr-blog-frontend.herokuapp.com/"] }));
+
 // bodyParser turns incoming body JSON into an object
 const bodyParser = require("body-parser");
 server.use(bodyParser.json());
