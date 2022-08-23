@@ -6,7 +6,15 @@ const server = express();
 
 // so our frontend on 3000(etc) can talk to our server on 3001(etc)
 const cors = require("cors");
-server.use(cors({ credentials: true, origin: ["http://localhost:3000","https://dougmr-blog-frontend.herokuapp.com"] }));
+server.use(
+    cors({
+        credentials: true,
+        origin: [
+            "http://localhost:3000",
+            "https://dougmr-blog-frontend.herokuapp.com",
+        ],
+    })
+);
 
 // bodyParser turns incoming body JSON into an object
 const bodyParser = require("body-parser");
@@ -26,7 +34,6 @@ server.use(
         cookie: { maxAge: oneMonth },
     })
 );
-
 
 //
 // v Endpoints v
@@ -69,7 +76,7 @@ server.post("/login", async (req, res) => {
     }
 });
 
-server.get("/loginStatus", (req, res) => {
+server.get("/loginStatus", async (req, res) => {
     console.log(req.session.user);
     if (req.session.user) {
         res.send({ isLoggedIn: true });
@@ -77,9 +84,27 @@ server.get("/loginStatus", (req, res) => {
         res.send({ isLoggedIn: false });
     }
 });
-server.get("/logout", (req, res) => {
+server.get("/logout", async (req, res) => {
     req.session.destroy();
     res.send({ isLoggedIn: false });
+});
+
+// 
+// Create new User
+// 
+server.post("/create-account", async (req, res) => {
+    const usernameExists = await User.findOne({
+        where: { username: req.body.username },
+    });
+    if( usernameExists ) {
+        res.send({error: "That username is already taken."});
+    } else {
+        User.create({
+            username: req.body.username,
+            password: bcrypt.hashSync(req.body.password, 10),
+        });
+        res.send({success: true});
+    }
 });
 
 // get post
@@ -130,8 +155,8 @@ server.get("/author/:authID", async (req, res) => {
             where: { author_id: req.params.authID },
         }),
         user: await User.findByPk(req.params.authID, {
-			attributes: ["username"],
-		}),
+            attributes: ["username"],
+        }),
     });
 });
 
@@ -159,12 +184,11 @@ server.get("/authors", async (req, res) => {
 // run express API server in background to listen for incoming requests
 
 // if heroku, process.env.PORT will be provided
-let port = process.env.PORT; 
-if(!port){
+let port = process.env.PORT;
+if (!port) {
     // otherwise, fall back to localhost port 3001
     port = 3001;
 }
 server.listen(port, () => {
     console.log("Server online.");
 });
-
