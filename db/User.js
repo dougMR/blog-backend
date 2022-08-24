@@ -1,4 +1,4 @@
-//#4
+
 const { DataTypes } = require("sequelize");
 
 module.exports = (db) => {
@@ -10,5 +10,7 @@ module.exports = (db) => {
         },
         username: DataTypes.STRING,
         password: DataTypes.STRING,
+        email_address: DataTypes.STRING,
+        password_reset_token: DataTypes.STRING
     });
 };

@@ -1,4 +1,4 @@
-// #1
+
 // express is a framework for node.js that makes creating a server simpler
 // express setup includes (cors, body-parser, bcrypt, sessions)
 const express = require("express");
@@ -21,8 +21,12 @@ const bodyParser = require("body-parser");
 server.use(bodyParser.json());
 const bcrypt = require("bcrypt");
 
+const apiKey = require("./sendgridAPIkey");
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(apiKey);
+
 const sessions = require("express-session");
-// #2 #8 DB setup
+// DB setup
 const { db, User, Post } = require("./db/db.js");
 const SequelizeStore = require("connect-session-sequelize")(sessions.Store);
 const oneMonth = 100 * 60 * 60 * 24 * 30;
@@ -32,6 +36,8 @@ server.use(
         secret: "mysecretkey",
         store: new SequelizeStore({ db }),
         cookie: { maxAge: oneMonth },
+        resave: true,
+        saveUninitialized: true
     })
 );
 
@@ -89,21 +95,54 @@ server.get("/logout", async (req, res) => {
     res.send({ isLoggedIn: false });
 });
 
-// 
+server.post("/reset-password", async (req, res) => {
+    console.log("/reset-password, req.body: ",req.body);
+    const user = await User.findOne({ where: { email_address: req.body.emailAddress } });
+	if (user) {
+        const {nanoid} = await import("nanoid");
+        user.password_reset_token = nanoid();
+        await user.save();
+
+        const msg = {
+			to: user.email_address,
+			from: "droussin356@gmail.com", // Use the email address or domain you verified above
+			subject: "You Needed a Reset, Huh?",
+			html: `"Click <a href="http://localhost:3000/set-password?token=${user.password_reset_token}">here</a> to reset your password."`,
+		};
+
+		try {
+			await sgMail.send(msg);
+		} catch (error) {
+			console.error(error);
+
+			if (error.response) {
+				console.error(error.response.body);
+			}
+		}
+
+		//reset password here
+		res.send({ message: "Password has been reset. Go check your email" });
+	} else {
+		res.send({ error: "You don't have an account to reset a password on" });
+	}
+});
+
+//
 // Create new User
-// 
+//
 server.post("/create-account", async (req, res) => {
     const usernameExists = await User.findOne({
         where: { username: req.body.username },
     });
-    if( usernameExists ) {
-        res.send({error: "That username is already taken."});
+    if (usernameExists) {
+        res.send({ error: "That username is already taken." });
     } else {
         User.create({
             username: req.body.username,
             password: bcrypt.hashSync(req.body.password, 10),
+            email_address: req.body.emailAddress
         });
-        res.send({success: true});
+        res.send({ success: true });
     }
 });
 
@@ -180,7 +219,7 @@ server.get("/authors", async (req, res) => {
 // ^ Endpoints ^
 //
 
-// #9 starts the server listening for requests
+// starts the server listening for requests
 // run express API server in background to listen for incoming requests
 
 // if heroku, process.env.PORT will be provided
