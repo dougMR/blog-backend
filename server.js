@@ -1,4 +1,3 @@
-
 // express is a framework for node.js that makes creating a server simpler
 // express setup includes (cors, body-parser, bcrypt, sessions)
 const express = require("express");
@@ -37,7 +36,7 @@ server.use(
         store: new SequelizeStore({ db }),
         cookie: { maxAge: oneMonth },
         resave: true,
-        saveUninitialized: true
+        saveUninitialized: true,
     })
 );
 
@@ -85,7 +84,7 @@ server.post("/login", async (req, res) => {
 server.get("/loginStatus", async (req, res) => {
     console.log(req.session.user);
     if (req.session.user) {
-        res.send({ isLoggedIn: true });
+        res.send({ isLoggedIn: true, user:req.session.user });
     } else {
         res.send({ isLoggedIn: false });
     }
@@ -96,35 +95,62 @@ server.get("/logout", async (req, res) => {
 });
 
 server.post("/reset-password", async (req, res) => {
-    console.log("/reset-password, req.body: ",req.body);
-    const user = await User.findOne({ where: { email_address: req.body.emailAddress } });
-	if (user) {
-        const {nanoid} = await import("nanoid");
+    console.log("/reset-password, req.body: ", req.body);
+    const user = await User.findOne({
+        where: { email_address: req.body.emailAddress },
+    });
+    if (user) {
+        const { nanoid } = await import("nanoid");
         user.password_reset_token = nanoid();
         await user.save();
 
+        const url = process.env.DATABASE_URL
+            ? "https://dougmr-blog-frontend.heroku.com"
+            : "http://localhost:3000";
+
         const msg = {
-			to: user.email_address,
-			from: "droussin356@gmail.com", // Use the email address or domain you verified above
-			subject: "You Needed a Reset, Huh?",
-			html: `"Click <a href="http://localhost:3000/set-password?token=${user.password_reset_token}">here</a> to reset your password."`,
-		};
+            to: user.email_address,
+            from: "droussin356@gmail.com", // Use the email address or domain you verified above
+            subject: "You Needed a Reset, Huh?",
+            html: `"Click <a href="${url}/set-password?token=${user.password_reset_token}">here</a> to reset your password."`,
+        };
 
-		try {
-			await sgMail.send(msg);
-		} catch (error) {
-			console.error(error);
+        try {
+            await sgMail.send(msg);
+        } catch (error) {
+            console.error(error);
 
-			if (error.response) {
-				console.error(error.response.body);
-			}
-		}
+            if (error.response) {
+                console.error(error.response.body);
+            }
+        }
 
-		//reset password here
-		res.send({ message: "Password has been reset. Go check your email" });
-	} else {
-		res.send({ error: "You don't have an account to reset a password on" });
-	}
+        //reset password here
+        res.send({
+            message: "Password is ready to be reset. Go check your email.",
+        });
+    } else {
+        res.send({
+            error: "You don't have an account to reset a password on.",
+        });
+    }
+});
+
+server.post("/set-password", async (req, res) => {
+    const user = await User.findOne({
+        where: { password_reset_token: req.body.resetToken },
+    });
+    if(user) {
+        // set user's password
+        user.password = bcrypt.hashSync(req.body.password, 10);
+        user.password_reset_token = null;
+        user.save();
+        res.send({ success: true });
+    } else {
+        res.send({
+            error: "We didn't find your account to reset the password.",
+        });
+    }
 });
 
 //
@@ -140,7 +166,7 @@ server.post("/create-account", async (req, res) => {
         User.create({
             username: req.body.username,
             password: bcrypt.hashSync(req.body.password, 10),
-            email_address: req.body.emailAddress
+            email_address: req.body.emailAddress,
         });
         res.send({ success: true });
     }
