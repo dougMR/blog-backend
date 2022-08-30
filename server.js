@@ -28,7 +28,7 @@ const sessions = require("express-session");
 // DB setup
 const { db, User, Post } = require("./db/db.js");
 const SequelizeStore = require("connect-session-sequelize")(sessions.Store);
-const oneMonth = 100 * 60 * 60 * 24 * 30;
+const oneMonth = 1000 * 60 * 60 * 24 * 30;
 // use sessions in our express app
 server.use(
     sessions({
