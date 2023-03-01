@@ -1,9 +1,9 @@
-
 // #3 setup DB models
 const Sequelize = require("sequelize");
 const bcrypt = require("bcrypt");
 
 let options = {};
+/*
 // if on heroku, there will be process.env, with property DATABASE_URL
 let databaseURL = process.env.DATABASE_URL;
 if (!databaseURL) {
@@ -22,6 +22,31 @@ if (!databaseURL) {
                 rejectUnauthorized: false,
             },
         },
+    };
+}
+*/
+let databaseURL;
+// if on elasticbeanstalk, use elasticbeanstalk connection
+if (process.env.RDS_HOSTNAME) {
+
+    // elastic beanstalk
+    databaseURL = `postgres://${process.env.RDS_USERNAME}:${process.env.RDS_PASSWORD}@${process.env.RDS_HOSTNAME}:${process.env.RDS_PORT}/${process.env.RDS_DB_NAME}`;
+
+    // we're not on localhost
+    options = {
+        logging: false,
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false,
+            },
+        },
+    };
+} else {
+    // we're on localhost
+    databaseURL = "postgres://dougroussin@localhost:5432/blog";
+    options = {
+        logging: false,
     };
 }
 
