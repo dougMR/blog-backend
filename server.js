@@ -10,7 +10,9 @@ server.use(
         credentials: true,
         origin: [
             "http://localhost:3000",
-            "https://dougmr-blog-frontend.herokuapp.com",
+            "https://shopfaster.app",
+            "https://www.shopfaster.app"
+            // "https://dougmr-blog-frontend.herokuapp.com",
         ],
     })
 );
@@ -249,7 +251,9 @@ server.get("/authors", async (req, res) => {
 // run express API server in background to listen for incoming requests
 
 // if heroku, process.env.PORT will be provided
+// this works same for AWS
 let port = process.env.PORT;
+
 if (!port) {
     // otherwise, fall back to localhost port 3001
     port = 3001;
