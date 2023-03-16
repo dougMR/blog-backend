@@ -1,6 +1,7 @@
 // express is a framework for node.js that makes creating a server simpler
 // express setup includes (cors, body-parser, bcrypt, sessions)
 const express = require("express");
+// newer usage -> import express from "express";
 const server = express();
 
 // so our frontend on 3000(etc) can talk to our server on 3001(etc)
