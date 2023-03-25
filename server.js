@@ -261,4 +261,5 @@ if (!port) {
 }
 server.listen(port, () => {
     console.log("Server online.");
+    console.log("Listening on port "+port);
 });
